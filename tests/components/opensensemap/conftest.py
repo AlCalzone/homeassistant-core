@@ -20,11 +20,14 @@ class MockOpenSenseMapStation:
     def __init__(self, name: str = TEST_STATION_NAME) -> None:
         """Initialize the mock station."""
         self.data = {"name": name}
+        self.description = "Backyard senseBox"
         self.pm2_5 = 12.5
         self.pm10 = 23.5
         self.temperature = 21.5
         self.humidity = 47.2
         self.air_pressure = 1001.3
+        self.model = "senseBox:home"
+        self.exposure = "outdoor"
         self.wind_speed = 3.2
         self.wind_direction = 180
         self.precipitation = 0.0

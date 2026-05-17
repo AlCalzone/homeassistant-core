@@ -27,5 +27,15 @@
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, Home Assistant could not find the configured station. Check the station ID in your YAML configuration and restart Home Assistant, or remove the YAML configuration and add the integration again from the UI.",
       "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "pm10": {
+        "name": "PM10"
+      },
+      "pm2_5": {
+        "name": "PM2.5"
+      }
+    }
   }
 }

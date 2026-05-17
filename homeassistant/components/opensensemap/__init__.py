@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.AIR_QUALITY]
+PLATFORMS: list[Platform] = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 
 async def async_setup_entry(
