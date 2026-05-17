@@ -58,10 +58,16 @@ class OpenSenseMapDataUpdateCoordinator(DataUpdateCoordinator[OpenSenseMap]):
                     "Unable to fetch openSenseMap data for station %s",
                     self.config_entry.data[CONF_STATION_ID],
                 )
-            raise UpdateFailed("Unable to fetch openSenseMap data") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
         if "name" not in self._station.data:
-            raise UpdateFailed("Station is not available")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="station_not_found",
+            )
 
         if not self.last_update_success:
             LOGGER.info(

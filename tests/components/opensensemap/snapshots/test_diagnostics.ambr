@@ -1,0 +1,11 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'station_id': '5d4f91a7e1c3f3001a7b1234',
+    }),
+    'data': dict({
+      'currentLocation': '**REDACTED**',
+      'name': 'Backyard',
+    }),
+  })

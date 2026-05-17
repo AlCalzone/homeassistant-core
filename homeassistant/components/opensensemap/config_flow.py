@@ -5,7 +5,11 @@ from typing import Any
 from opensensemap_api.exceptions import OpenSenseMapConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
@@ -31,7 +35,16 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
             raise StationNotFound
 
         await self.async_set_unique_id(station_id)
-        self._abort_if_unique_id_configured()
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_entry = self._get_reconfigure_entry()
+            if any(
+                entry.unique_id == station_id
+                and entry.entry_id != reconfigure_entry.entry_id
+                for entry in self._async_current_entries()
+            ):
+                self._abort_if_unique_id_configured()
+        else:
+            self._abort_if_unique_id_configured()
 
         title = user_input.get(CONF_NAME, station_name)
         data = {CONF_STATION_ID: station_id}
@@ -75,6 +88,38 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                title, data = await self._async_validate_station(user_input)
+            except OpenSenseMapConnectionError:
+                errors["base"] = "cannot_connect"
+            except StationNotFound:
+                errors["base"] = "station_not_found"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    title=title,
+                    unique_id=self.unique_id,
+                    data_updates=data,
+                )
+        else:
+            user_input = {CONF_STATION_ID: reconfigure_entry.data[CONF_STATION_ID]}
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
             errors=errors,
         )
 

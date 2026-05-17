@@ -1,5 +1,6 @@
 """Fixtures for the openSenseMap integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -11,6 +12,8 @@ from tests.common import MockConfigEntry
 
 TEST_STATION_ID = "5d4f91a7e1c3f3001a7b1234"
 TEST_STATION_NAME = "Backyard"
+TEST_STATION_ID_2 = "5d4f91a7e1c3f3001a7b5678"
+TEST_STATION_NAME_2 = "Roof"
 TEST_CUSTOM_NAME = "Garden Air"
 
 
@@ -19,7 +22,7 @@ class MockOpenSenseMapStation:
 
     def __init__(self, name: str = TEST_STATION_NAME) -> None:
         """Initialize the mock station."""
-        self.data = {"name": name}
+        self.data = {"currentLocation": {"coordinates": [7.0, 50.0]}, "name": name}
         self.description = "Backyard senseBox"
         self.pm2_5 = 12.5
         self.pm10 = 23.5
@@ -44,7 +47,9 @@ def mock_station() -> MockOpenSenseMapStation:
 
 
 @pytest.fixture
-def mock_opensensemap(mock_station: MockOpenSenseMapStation):
+def mock_opensensemap(
+    mock_station: MockOpenSenseMapStation,
+) -> Generator[MockOpenSenseMapStation]:
     """Patch the openSenseMap client."""
     with patch(
         "homeassistant.components.opensensemap.coordinator.OpenSenseMap",
@@ -54,7 +59,7 @@ def mock_opensensemap(mock_station: MockOpenSenseMapStation):
 
 
 @pytest.fixture
-def mock_setup_entry() -> AsyncMock:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.opensensemap.async_setup_entry",
@@ -78,6 +83,7 @@ def mock_config_entry() -> MockConfigEntry:
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_opensensemap: MockOpenSenseMapStation,
 ) -> MockConfigEntry:
     """Set up the integration."""
     mock_config_entry.add_to_hass(hass)
