@@ -19,6 +19,10 @@
     }
   },
   "issues": {
+    "deprecated_air_quality_yaml": {
+      "description": "The legacy openSenseMap air quality entity configured through YAML for station {station_id} is deprecated.\n\nUse the sensor entities created by the integration instead, then remove the openSenseMap YAML configuration and restart Home Assistant.",
+      "title": "The openSenseMap air quality entity is deprecated"
+    },
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, Home Assistant could not connect to the configured station. Check the station ID in your YAML configuration and restart Home Assistant, or remove the YAML configuration and add the integration again from the UI.",
       "title": "[%key:component::homeassistant::issues::deprecated_yaml::title%]"

@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, INTEGRATION_TITLE
+from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, INTEGRATION_TITLE, LOGGER
 from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapDataUpdateCoordinator
 
 PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
@@ -71,6 +71,18 @@ async def async_setup_platform(
             "integration_title": INTEGRATION_TITLE,
         },
     )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_air_quality_yaml_{config[CONF_STATION_ID]}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_air_quality_yaml",
+        translation_placeholders={
+            "station_id": config[CONF_STATION_ID],
+        },
+    )
 
 
 async def async_setup_entry(
@@ -79,6 +91,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up openSenseMap air quality entities from a config entry."""
+    LOGGER.warning(
+        "The openSenseMap air quality entity is deprecated; use the sensor entities instead"
+    )
     async_add_entities([OpenSenseMapQuality(entry.runtime_data, entry.title)])
 
 
@@ -88,6 +103,7 @@ class OpenSenseMapQuality(
     """Implementation of an openSenseMap air quality entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self, coordinator: OpenSenseMapDataUpdateCoordinator, name: str
@@ -95,6 +111,7 @@ class OpenSenseMapQuality(
         """Initialize the air quality entity."""
         super().__init__(coordinator)
         self._name = name
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_air_quality"
 
     @property
     def name(self) -> str:

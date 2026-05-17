@@ -4,13 +4,9 @@ from unittest.mock import patch
 
 from opensensemap_api.exceptions import OpenSenseMapConnectionError
 
-from homeassistant.components.air_quality import (
-    ATTR_PM_10,
-    DOMAIN as AIR_QUALITY_DOMAIN,
-)
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_STATION_ID
@@ -18,16 +14,19 @@ from .conftest import TEST_STATION_ID
 
 async def test_setup_entry(
     hass: HomeAssistant,
-    mock_opensensemap,
+    entity_registry: er.EntityRegistry,
+    caplog,
     setup_integration,
 ) -> None:
-    """Test setting up the air quality entity from a config entry."""
+    """Test the deprecated air quality entity is disabled by default."""
     state = hass.states.get("air_quality.backyard")
+    assert state is None
 
-    assert state is not None
-    assert state.state == "12.5"
-    assert state.attributes[ATTR_PM_10] == 23.5
-    assert state.attributes[ATTR_ATTRIBUTION] == "Data provided by openSenseMap"
+    entry = entity_registry.async_get("air_quality.backyard")
+    assert entry is not None
+    assert entry.disabled
+
+    assert "The openSenseMap air quality entity is deprecated" in caplog.text
 
 
 async def test_yaml_import_success(
@@ -51,6 +50,9 @@ async def test_yaml_import_success(
     assert len(hass.config_entries.async_entries("opensensemap")) == 1
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, "deprecated_yaml_opensensemap"
+    )
+    assert issue_registry.async_get_issue(
+        "opensensemap", f"deprecated_air_quality_yaml_{TEST_STATION_ID}"
     )
 
 
