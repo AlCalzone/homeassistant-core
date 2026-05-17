@@ -1,19 +1,29 @@
 """Tests for the openSenseMap sensor platform."""
 
+from unittest.mock import patch
+
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_config_entry,
     mock_opensensemap,
-    setup_integration,
 ) -> None:
     """Test the sensor entities."""
-    await snapshot_platform(hass, entity_registry, snapshot, setup_integration.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.opensensemap.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
