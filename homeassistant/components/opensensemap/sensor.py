@@ -28,6 +28,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import OpenSenseMapConfigEntry
 from .entity import OpenSenseMapEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True, frozen=True)
 class OpenSenseMapSensorEntityDescription(SensorEntityDescription):

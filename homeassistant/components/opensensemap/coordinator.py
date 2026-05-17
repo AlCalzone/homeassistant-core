@@ -53,9 +53,20 @@ class OpenSenseMapDataUpdateCoordinator(DataUpdateCoordinator[OpenSenseMap]):
         try:
             await self._station.get_data()
         except OpenSenseMapConnectionError as err:
-            raise UpdateFailed(f"Unable to fetch openSenseMap data: {err}") from err
+            if self.last_update_success:
+                LOGGER.warning(
+                    "Unable to fetch openSenseMap data for station %s",
+                    self.config_entry.data[CONF_STATION_ID],
+                )
+            raise UpdateFailed("Unable to fetch openSenseMap data") from err
 
         if "name" not in self._station.data:
             raise UpdateFailed("Station is not available")
+
+        if not self.last_update_success:
+            LOGGER.info(
+                "Successfully fetched openSenseMap data for station %s again",
+                self.config_entry.data[CONF_STATION_ID],
+            )
 
         return self._station
