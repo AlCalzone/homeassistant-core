@@ -189,6 +189,7 @@ homeassistant.components.duckdns.*
 homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
+homeassistant.components.e3dc.*
 homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
