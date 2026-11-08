@@ -148,7 +148,7 @@ async def test_refused_read_makes_sensors_unavailable(
     mock_unit.fail_read(register(40068), IllegalDataAddressError())
     await _poll(hass, freezer)
 
-    assert not init_integration.runtime_data.last_update_success
+    assert not init_integration.runtime_data.coordinator.last_update_success
     assert hass.states.get(PV_POWER).state == STATE_UNAVAILABLE
 
     mock_unit.fail_read(register(40068), None)

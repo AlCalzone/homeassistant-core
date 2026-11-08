@@ -30,7 +30,7 @@ async def async_get_config_entry_diagnostics(
     are one lower than the register numbers in E3/DC's documentation. The serial
     number registers are left out.
     """
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     device = coordinator.device
     identity = device.identity
     raw = read_error = None

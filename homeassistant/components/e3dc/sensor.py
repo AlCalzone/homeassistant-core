@@ -262,7 +262,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the E3/DC sensor platform."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     device = coordinator.device
     served = {*device.readings_components, *device.settings_components}
     async_add_entities(

@@ -68,6 +68,17 @@
         "name": "Feed-in limited"
       }
     },
+    "number": {
+      "active_power_limit_setpoint": {
+        "name": "Active power limit setpoint"
+      },
+      "battery_power_setpoint": {
+        "name": "Battery power setpoint"
+      },
+      "feed_in_limit_setpoint": {
+        "name": "Feed-in limit setpoint"
+      }
+    },
     "sensor": {
       "active_power_failsafe_timeout": {
         "name": "Active power failsafe timeout"
@@ -137,17 +148,43 @@
       "wallbox_solar_power": {
         "name": "Wallbox solar power"
       }
+    },
+    "switch": {
+      "active_power_limit_control": {
+        "name": "Active power limit control"
+      },
+      "battery_power_control": {
+        "name": "Battery power control"
+      },
+      "feed_in_limit_control": {
+        "name": "Feed-in limit control"
+      }
     }
   },
   "exceptions": {
+    "battery_power_inconsistent": {
+      "message": "The battery power was only partly written. The integration tried to end remote battery control."
+    },
+    "feed_in_limit_inconsistent": {
+      "message": "The feed-in limit was only partly written. The integration tried to write the previous limit back, if it knew one."
+    },
     "modbus_error": {
       "message": "Error communicating with the power station."
+    },
+    "no_setpoint": {
+      "message": "Set a value first. There is no setpoint to hold yet."
     },
     "not_e3dc": {
       "message": "The device is not an E3/DC power station in E3/DC protocol mode."
     },
+    "not_loaded": {
+      "message": "Home Assistant is stopping or the entry is unloading, so no new setpoint is taken."
+    },
     "serial_mismatch": {
       "message": "The device at this address has serial number {found}, not {expected}. If the power station's IP address changed, reconfigure the entry."
+    },
+    "write_failed": {
+      "message": "Failed to write to the power station."
     }
   }
 }

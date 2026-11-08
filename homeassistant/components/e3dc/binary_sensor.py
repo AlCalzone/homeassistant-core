@@ -60,7 +60,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the E3/DC binary sensor platform."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
     async_add_entities(
         E3dcBinarySensor(coordinator, description) for description in BINARY_SENSORS
     )

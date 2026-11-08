@@ -14,9 +14,31 @@
         "default": "mdi:transmission-tower-export"
       }
     },
+    "number": {
+      "active_power_limit_setpoint": {
+        "default": "mdi:speedometer-slow"
+      },
+      "battery_power_setpoint": {
+        "default": "mdi:home-battery"
+      },
+      "feed_in_limit_setpoint": {
+        "default": "mdi:transmission-tower-export"
+      }
+    },
     "sensor": {
       "inverter_mode": {
         "default": "mdi:sine-wave"
+      }
+    },
+    "switch": {
+      "active_power_limit_control": {
+        "default": "mdi:speedometer-slow"
+      },
+      "battery_power_control": {
+        "default": "mdi:home-battery"
+      },
+      "feed_in_limit_control": {
+        "default": "mdi:transmission-tower-export"
       }
     }
   }

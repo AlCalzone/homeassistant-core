@@ -3,15 +3,21 @@
 from e3dc_ess_modbus import E3dcPowerStation
 
 from homeassistant.components.modbus import async_get_unit
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 
 from .config_flow import create_modbus_params
 from .const import DOMAIN, UNIT_ID
-from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
+from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator, E3dcRuntimeData
+from .holds import E3dcHolds
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None:
@@ -40,10 +46,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None
             },
         )
 
-    entry.runtime_data = coordinator
+    holds = E3dcHolds(hass, entry, device)
+    entry.runtime_data = E3dcRuntimeData(coordinator, holds)
+
+    # Home Assistant doesn't unload entries when it stops
+    async def _async_release_on_stop(event: Event) -> None:
+        await holds.async_close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_release_on_stop)
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: E3dcConfigEntry) -> None:
-    """Unload a config entry."""
+    """Unload a config entry and hand every held setpoint back."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.holds.async_close()

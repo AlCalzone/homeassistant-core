@@ -1,0 +1,113 @@
+"""Support for E3/DC setpoints as numbers."""
+
+from dataclasses import dataclass
+from typing import override
+
+from e3dc_ess_modbus import Setpoint
+
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntityDescription,
+    NumberMode,
+    RestoreNumber,
+)
+from homeassistant.const import PERCENTAGE, UnitOfPower
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import E3dcConfigEntry
+from .entity import E3dcSetpointDescription, E3dcSetpointEntity
+
+PARALLEL_UPDATES = 1
+
+
+@dataclass(frozen=True, kw_only=True)
+class E3dcSetpointNumberDescription(NumberEntityDescription, E3dcSetpointDescription):
+    """Describe a setpoint the integration holds once it is set."""
+
+
+SETPOINT_NUMBERS: tuple[E3dcSetpointNumberDescription, ...] = (
+    E3dcSetpointNumberDescription(
+        key="battery_power_setpoint",
+        translation_key="battery_power_setpoint",
+        component="battery_control",
+        device_class=NumberDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_min_value=-50000,
+        native_max_value=50000,
+        native_step=100,
+        mode=NumberMode.BOX,
+        setpoint=Setpoint.BATTERY_POWER,
+    ),
+    E3dcSetpointNumberDescription(
+        key="feed_in_limit_setpoint",
+        translation_key="feed_in_limit_setpoint",
+        component="grid_control",
+        device_class=NumberDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_min_value=0,
+        native_max_value=100000,
+        native_step=100,
+        mode=NumberMode.BOX,
+        setpoint=Setpoint.FEED_IN_LIMIT,
+    ),
+    E3dcSetpointNumberDescription(
+        key="active_power_limit_setpoint",
+        translation_key="active_power_limit_setpoint",
+        component="grid_control",
+        native_unit_of_measurement=PERCENTAGE,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=0.1,
+        mode=NumberMode.BOX,
+        setpoint=Setpoint.ACTIVE_POWER_LIMIT,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: E3dcConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the E3/DC number platform."""
+    runtime_data = entry.runtime_data
+    device = runtime_data.coordinator.device
+    served = {*device.readings_components, *device.settings_components}
+    async_add_entities(
+        E3dcSetpointNumber(runtime_data, description)
+        for description in SETPOINT_NUMBERS
+        if description.component in served
+    )
+
+
+class E3dcSetpointNumber(E3dcSetpointEntity, RestoreNumber):
+    """A setpoint: setting it writes it and starts holding it.
+
+    It shows the last value set, held or not, and restores it after a
+    restart without writing it, so the control switch can hold it again.
+    """
+
+    entity_description: E3dcSetpointNumberDescription
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        setpoint = self.entity_description.setpoint
+        last = await self.async_get_last_number_data()
+        # A value set while the restore was loading wins over the restored one
+        if (
+            last is not None
+            and last.native_value is not None
+            and self._holds.requested(setpoint) is None
+        ):
+            self._holds.remember(setpoint, last.native_value)
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        return self._holds.requested(self.entity_description.setpoint)
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        await self._holds.async_start(self.entity_description.setpoint, value)

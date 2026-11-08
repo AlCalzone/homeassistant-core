@@ -1,5 +1,6 @@
 """Data update coordinator for E3/DC devices."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -15,6 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_NAME, DOMAIN, SCAN_INTERVAL
+from .holds import E3dcHolds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +30,6 @@ POLLED_COMPONENTS = (
 )
 # The components that tell which optional hardware is installed, read once
 HARDWARE_COMPONENTS = ("wallboxes", "power_meters")
-
-type E3dcConfigEntry = ConfigEntry[E3dcDataUpdateCoordinator]
 
 
 class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -97,3 +97,14 @@ class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from ExceptionGroup(
                 "components failed to refresh", list(report.failed.values())
             )
+
+
+@dataclass
+class E3dcRuntimeData:
+    """The coordinator and the setpoint holds of one power station."""
+
+    coordinator: E3dcDataUpdateCoordinator
+    holds: E3dcHolds
+
+
+type E3dcConfigEntry = ConfigEntry[E3dcRuntimeData]
